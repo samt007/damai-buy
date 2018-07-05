@@ -1,0 +1,51 @@
+{
+	"manifest_version": 2,
+	"name": "大麦下单助手",
+	"version": "1.0.0",
+	"description": "大麦购票网站定制的下单助手",
+	"options_page": "options.html",
+	"content_security_policy": "script-src 'self' https://hm.baidu.com/; object-src 'self'",
+	"icons": {
+        "16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "96": "images/icon96.png",
+        "128": "images/icon128.png"
+    },
+	"browser_action": {
+		"default_icon": {
+			"19": "images/icon19.png",
+			"38": "images/icon38.png"
+		},
+		"default_title": "大麦下单助手"
+	},
+	"background": {
+		"scripts": [
+			"background.js"
+		]
+	},
+	"permissions" : ["tabs"
+					,"http://*/*" 
+					,"https://*/*"],
+	"content_scripts":[{
+		"matches" : ["https://www.damai.cn/*"
+					,"https://piao.damai.cn/*"
+					,"https://buy.damai.cn/*"],
+		"js":["include/lib/sea.js",
+		      "include/jquery-3.0.0.min.js",
+			  "include/layer/layer.js",
+			  "include/jquery.datetimepicker.full.js",
+			  "include/HackTimer.min.js",
+			  "include/content.js",
+			  "content_script.js"],
+		"css":["include/layer/skin/layer.css",
+			   "include/jquery.datetimepicker.css",
+		       "include/bootstrap/css/bootstrap.table.css"],
+		"run_at": "document_end"
+	}],
+	"web_accessible_resources":[
+		"include/19_Morning_breeze.ogg",
+		"include/layer/skin/default/icon.png",
+		"include/bootstrap/fonts/glyphicons-halflings-regular.woff",
+		"options.html"
+	]
+}
