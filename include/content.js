@@ -9,7 +9,7 @@ function(require) {
 	order = require("../widgets/rob/order"),
 	injectDom = require("../widgets/inject/dom"),
 	host=runtime.getDomainFromUrl(),
-	sour = 'unknown';
+	sour = 'unknown',chooseRealname = 'Y';
 	window.runtime = runtime;
 	host.indexOf('piao.damai.cn') !== -1 ? sour = 'buyPage' : (host.indexOf('buy.damai.cn') !== -1 ? sour = 'orderPage' : sour = 'unknown');
 	console.log('host:'+host);
@@ -23,6 +23,8 @@ function(require) {
 		console.log('serverTime:'+runtime.nowFormatMS());
 		sour === 'buyPage' && injectDom.buyPageCrack(function(){
 			injectDom.buyPageBookButton(function(){
+				$('#m-certification-a').length>0?(chooseRealname='Y'):(chooseRealname='N');
+				console.log('chooseRealname',chooseRealname);
 				injectDom.buyPageBookTime(sour,options,function(bookTimeBuy,buyRealname){
 					page.options=options,
 					page.options.bookTimeBuy=bookTimeBuy,
@@ -30,7 +32,8 @@ function(require) {
 					page.options.leadTimeOfBookTime=parseInt(options.leadTimeOfBookTime),
 					page.options.delayTimeOfBookTime=parseInt(options.delayTimeOfBookTime),
 					page.options.baiduOcrKeys=JSON.parse(options.baiduOcrKeys),
-					page.options.bookTimeBuyMS=new Date(bookTimeBuy).getTime();
+					page.options.bookTimeBuyMS=new Date(bookTimeBuy).getTime(),
+					page.options.chooseRealname=chooseRealname;
 					//page.options.apiHost=options.apiHost;
 					console.log(page);
 					buy.monitor(page, function(){
@@ -49,11 +52,12 @@ function(require) {
 			console.log('--->orderPage开始处理自动下单！时间：'+runtime.nowFormatMS());
 			page.options = JSON.parse(options.pageOptions||'{}');
 			order.setPage(page);
+			page.options.chooseRealname=='Y' ? !function(){
 			order.clickRealnameBtn(function(type){
 				console.log('clickRealnameBtn 开始自动选择购票人:'+type+'...时间：'+runtime.nowFormatMS());
 				order.chooseRealname(type,function(){
 					console.log('chooseRealname 执行完毕...时间：'+runtime.nowFormatMS());
-					order.confirmRealname(function(){
+					order.confirmRealname(type,function(){
 						console.log('confirmRealname 执行完毕...时间：'+runtime.nowFormatMS());
 						order.clickOrderConfirmBtn(function(){
 							console.log('clickOrderConfirmBtn 执行完毕...时间：'+runtime.nowFormatMS());
@@ -75,7 +79,8 @@ function(require) {
 						})
 					})
 				})
-			},function(){//不需要选择购票人
+			},function(){ alert('找不到购票人按钮处理对象！请自行到界面下单！'); })
+			}():!function(){//不需要选择购票人
 				console.log('clickRealnameBtn不需要选择购票人！时间：'+runtime.nowFormatMS());
 				order.clickOrderConfirmBtn(function(){
 					order.slidetounlock(function(){
@@ -93,7 +98,7 @@ function(require) {
 						console.log('不需要滑动验证');
 					})
 				})
-			})
+			}()
 		}()
 	});
 });
@@ -193,17 +198,20 @@ function(l, h, g) {
 			console.log('setPage:',this.page);
 		},
 		clickRealnameBtn: function(callback,failCallback){
-			var breakGet=false;
-			f.populateDom('.m-panel-realname a.u-btn-rds','realnameBtn1',100,20,function(dom){
-				dom.click();
-				breakGet=true;
-				callback && callback('realnameType1');
-			},function(){breakGet=true,failCallback&failCallback();},function(){return breakGet});
-			f.populateDom('.hd-1 a.u-btn-rds','realnameBtn2',100,20,function(dom){
-				dom.click();
-				breakGet=true;
-				callback && callback('realnameType2');
-			},function(){breakGet=true,failCallback&failCallback();},function(){return breakGet});
+			var maxTimes=50,curTimes=0,
+			realnameTaskId = setInterval(function(){
+				console.log(curTimes);
+				var realnameBtnDom1 = $('.m-panel-realname a.u-btn-rds')[0],realnameBtnDom2=$('.hd-1 a.u-btn-rds')[0];
+				++curTimes<maxTimes ? !function(){
+					(realnameBtnDom1 || realnameBtnDom2) && clearInterval(realnameTaskId);
+					realnameBtnDom1 && !realnameBtnDom1.click() && callback && callback('realnameType1');
+					realnameBtnDom2 && !realnameBtnDom2.click() && callback && callback('realnameType2');
+				}():!function(){
+					clearInterval(realnameTaskId);
+					failCallback&&failCallback();
+				}()
+				//console.log(curTimes,realnameBtnDom1,realnameBtnDom2);
+			},100);
 		},
 		chooseRealname: function(type,callback){
 			var l = this;
@@ -211,25 +219,40 @@ function(l, h, g) {
 			! function(e,t){
 				var i=1;
 				! function n(){
-					var $chooseDom,inputSelector
+					var $chooseDom,inputSelector,maxChooseRealnames=1;
 					if(type=='realnameType1'){
 						$chooseDom=$('.one-table>.one-tb>table>tbody>tr[ms-on-click="@modal.config_realname.onlinkage(el)"]');
 						inputSelector='input[type="radio"]';
+						maxChooseRealnames=1;
 					}else{
 						$chooseDom=$('.one-table>.one-tb>table>tbody>tr[ms-class="@isClass2[$index]"]');
 						inputSelector='input[type="checkbox"]';
+						var chooseNameCountText=$($('.hd-1 span label')[3]).html(),
+						chooseNameCount=chooseNameCountText&&chooseNameCountText.split('，')[1].replace('本次需要选择','').replace('位常用购票人','');
+						console.log(chooseNameCountText,chooseNameCount);
+						!isNaN(chooseNameCount) && (maxChooseRealnames=parseInt(chooseNameCount));
 					}
 					$chooseDom.length >0 ? !function(){
-						var beitai,chooseFlag=false;//备胎，你懂的 //console.log('buyRealname:',l.page.options.buyRealname);
+						var chooseFlag=false,beitai//beitai备胎，你懂的
+						,buyRealnameList=l.page.options.buyRealname?l.page.options.buyRealname.replace('，',',').split(','):[]
+						,chooseCount=0;
+						console.log('buyRealnameList',buyRealnameList);
 						l.page.options.buyRealname ? !function(){
-							$chooseDom.each(function(i,o){
-								if($(o).has(inputSelector).length>0){//console.log(o)
+							$chooseDom.each(function(i,o){//console.log(i,o)
+								if($(o).has(inputSelector).length>0){
 									beitai===undefined && (beitai=o);
 									var htmlStr=$(o).html();
-									if(htmlStr.indexOf(l.page.options.buyRealname) !== -1){
-										$(o).find(inputSelector)[0].click();
-										chooseFlag=true;
-										return false;
+									for(var curRealname of buyRealnameList){
+										if(htmlStr.indexOf(curRealname) !== -1){
+											$(o).find(inputSelector)[0].click();
+											chooseFlag=true;
+											console.log('选择了',curRealname);
+											chooseCount++;
+											if(chooseCount>=maxChooseRealnames){
+												console.log('已经选择人数',chooseCount,'>=可选择人数',maxChooseRealnames,'程序退出');
+												return false;
+											} 
+										}
 									}
 								}
 							})
@@ -246,18 +269,19 @@ function(l, h, g) {
 				}()
 			}(100,60)
 		},
-		confirmRealname: function(callback){
-			f.populateDom('p.one-btn a','confirmBtn',100,30,function(dom){
-				dom.click();
-				callback && callback();
+		confirmRealname: function(type,callback){
+			var confirmSelector;
+			type=='realnameType1'?(confirmSelector='p.one-btn a'):(confirmSelector='a.u-btn-c5[ms-on-click="@modal.config_fastbuy.onConfirm()"]')
+			//console.log('confirmSelector',confirmSelector);
+			f.populateDom(confirmSelector,'confirmBtn',100,30,function(dom){
+				!dom.click() && callback && callback();
 			},function(){
 				alert('确认购票按钮失败！找不到dom操作！');
 			});
 		},
 		clickOrderConfirmBtn: function(callback){
 			f.populateDom('#orderConfirmSubmit','orderConfirmBtn',100,30,function(dom){
-				dom.click();
-				callback && callback();
+				!dom.click() && callback && callback();
 			},function(){
 				alert('确认订单按钮失败！找不到dom操作！');
 			});
@@ -330,7 +354,6 @@ function(l, h, g) {
 		clickCaptchaImg: function(data,callback){//自动点击图片，最后一步了，真艰辛啊！
 			var img = document.getElementsByClassName('clickCaptcha_img')[0].getElementsByTagName('img')[0];
 			var imgRect = img.getBoundingClientRect();//区间的坐标
-			//img.onclick = function(event) {console.log(event);};
 			var offX=Math.floor((data.charLeft+data.charWidth/2)/200*230)
 			   ,offY=Math.floor((data.charTop+data.charHeight/2)/200*230)
 			   ,leftPos=imgRect.left+offX
@@ -804,13 +827,14 @@ function(b, a, d) {
             $.get(h + "?_=" + Math.random())
         },
 		g.populateDom = function(selector,name,interval,maxTimes,callback,failCallback,breakFn){
-			var i=1;//console.log($(selector));
+			var i=1;
+			//console.log($(selector));
 			! function(e){
 				breakFn&&breakFn()==true ? !console.log('-->'+i+' times get ('+name+') break!') :
 				! function n(){
 					var selDom=$(selector)[0];
 					selDom !==undefined ? !function(){
-						i==1 ? !console.log('-->'+i+' times get ('+name+') Dom onece.') : !console.log('-->'+i+' times get ('+name+') Dom interval.')
+						i==1 ? !console.log('-->'+i+' times get ('+name+') Dom onece.') : !console.log('-->'+i+' times get ('+name+') Dom interval.');
 						callback && callback(selDom);
 					}() : setTimeout(function(){
 						i++,i<=maxTimes ? n() : failCallback&&failCallback();
