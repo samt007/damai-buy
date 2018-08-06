@@ -66,7 +66,7 @@ function(require) {
 						console.log('click at:'+runtime.nowFormatMS());
 						page.flushTagStorage(function(){//必须要存到tag里面才可以跨域
 							console.log('--->buyPage点击下单按钮时间：'+runtime.nowFormatMS());
-							page.options.clickBuy=='Y' ? $("#btnBuyNow")[0].click():!function(){
+							page.options.clickBuy=='Y' ? !$("#btnBuyNow")[0].click()&&!page.clearSessionStorage():!function(){
 								page.clearSessionStorage();
 								page.clearTagStorage();
 								showAlert('提示：设置不自动下单，大麦下单助手工作完成！!');
@@ -151,9 +151,7 @@ define("../widgets/option/page", ["../utils/background"],
 function(r, b, c) {//页面的属性，动态的，也是后面的自动下单功能需要用到的
     var page = function(){//就是理解为构造函数了：https://www.cnblogs.com/pizitai/p/6427433.html
 		this.options = {}
-			/*bookTimeBuy: '',//预约下单时间
-			buyRealname: '', //购票人
-			bookTimeBuyMS: 0,//预约时间毫秒*/
+		//bookTimeBuy: 预约下单时间 buyRealname: 购票人 bookTimeBuyMS: 预约时间毫秒
 	},
 	bg = r("../utils/background");
 	page.prototype = {
@@ -543,7 +541,7 @@ function(b, c, a) {
 				dataType:'json',
 				success: function (data) {
 					console.log('getiImageOcr',data);
-					if(data["error_code"]=='110'){//如果token过期了，则需要重新获取//{"error_msg":"Access token invalid or no longer valid","error_code":110}
+					if(data["error_code"]=='110'||data["error_code"]=='111'){//如果token过期了，则需要重新获取//{"error_msg":"Access token invalid or no longer valid","error_code":110}
 						console.log("need to ref the token ! times:"+l.tokenTimes);
 						l.tokenTimes++;
 						if(l.tokenTimes>=l.MAX_TOKEN_TIMES) {

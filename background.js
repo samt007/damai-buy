@@ -1,8 +1,7 @@
 /*
-开发日期:2016.5.11
+开发日期:2018.8.6
 开发者:samt007
 开发者联系邮件：samt007@qq.com
-特别说明:一键购物助手。详细的说明手册请看：快去买 http://kqmai.com
 脚本用途:监听content_script发送的消息
 */
 
@@ -15,7 +14,6 @@ var queryUrl = 'http://miao.enjoyapps.org/queryMiaoList.php' //暂时接用原�
 //var LINK_INSTALL = baseUrl + '/installation.html'
 var queryData = new FormData();
 
-var damaiBuyApiUrl = 'http://192.168.88.123:8088'; //'http://erptest.xinyiglass.com:8000';//'http://192.168.88.123:8088';
 var serverTimeUrl = 'http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp';//获取更新信息API
 
 var extID = chrome.i18n.getMessage("@@extension_id");
@@ -23,11 +21,8 @@ var extVersion
 var platform = 'normal'
 
 localStorage['platform'] = platform
-localStorage['damaiBuyApiUrl'] = damaiBuyApiUrl
-localStorage['ref_auto_buy'] = 'N'
-if(!localStorage["timeGap"]) localStorage["timeGap"]='0'
-
-console.log('damaiBuyApiUrl:'+localStorage['damaiBuyApiUrl'])
+//localStorage['ref_auto_buy'] = 'N'
+!localStorage["timeGap"] && (localStorage["timeGap"]='0')
 
 AjaxPost('manifest.json', 'form', function(rsp){
     extVersion = rsp.version
@@ -37,20 +32,21 @@ AjaxPost('manifest.json', 'form', function(rsp){
 
 queryData.append('timestamp', localStorage['timestamp']);
 
-localStorage['initBaiduOcrKeys']=JSON.stringify(
-[{
-	'apiKey': '92R3x6PaOyBuwp7YxwcYEmXj',
-	'secretKey': '8xFGznGBXXm608DBLat9jWTNWeGyu1AF',
-	'accessToken': '24.6aca226efa6237c692f7ad827b85c7c2.2592000.1532935439.282335-9976576'
-},{
-	'apiKey': 'so4uSuzSstsbrxw8kXgCN5nc',
-	'secretKey': 'zuxtZ7BZYHZZMZxpVprdR3wolKNEhKlS',
-	'accessToken': '24.ba67b4ba828885b0d47c05edea97a799.2592000.1532695880.282335-11452461'
-}]
-);
-
-localStorage['baiduOcrKeys']=localStorage['initBaiduOcrKeys'];
-console.log('init baiduOcrKeys:',localStorage['baiduOcrKeys'])
+if (!localStorage['baiduOcrKeys']) {
+	var initBaiduOcrKeys=JSON.stringify(
+	[{
+		'apiKey': '92R3x6PaOyBuwp7YxwcYEmXj',
+		'secretKey': '8xFGznGBXXm608DBLat9jWTNWeGyu1AF',
+		'accessToken': '24.6aca226efa6237c692f7ad827b85c7c2.2592000.1532935439.282335-9976576'
+	},{
+		'apiKey': 'so4uSuzSstsbrxw8kXgCN5nc',
+		'secretKey': 'zuxtZ7BZYHZZMZxpVprdR3wolKNEhKlS',
+		'accessToken': '24.ba67b4ba828885b0d47c05edea97a799.2592000.1532695880.282335-11452461'
+	}]
+	);
+	localStorage['baiduOcrKeys']=initBaiduOcrKeys;
+	console.log('baiduOcrKeys:',localStorage['baiduOcrKeys'])
+}
 
 var i=0;
 var gapTimeInterval=setInterval(function(){

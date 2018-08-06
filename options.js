@@ -18,141 +18,42 @@ function getCheckBox($obj){
 
 // Saves options to localStorage.
 function save_options() {
-	getUserMessage();
 	save_localStorage();
 }
 
-
-function getUserMessage(){
-	//根据用户信息，找后台的权限配置：
-	if(localStorage["username"]!=$('#username').val() || localStorage["user_password"]!=$('#user_password').val()){
-		$.ajax({
-			async:true,
-			type:'post', 
-			data:JSON.stringify({"username":$('#username').val(),"password":$('#user_password').val()}),
-			contentType: 'application/json; charset=utf-8',
-			url:localStorage['quickBuyApiUrl']+'/quick-buy/fnd/quickbuy/getUserData',
-			dataType:'json',
-			success: function (data) {
-				//console.log(data)
-				localStorage["orderBuyRight"]='N';
-				localStorage["payBuyRight"]='N';
-				localStorage["miaoBuyRight"]='N';
-				localStorage["activeEndDate"]='';
-				if(data.ok){
-					localStorage["activeEndDate"]=data.data.user.activeEndDate;
-					data.data.userRight.forEach(function( val, index ) {
-						//console.log( val);
-						if(val.rightCode=='orderBuyRight') localStorage["orderBuyRight"]='Y';
-						if(val.rightCode=='payBuyRight') localStorage["payBuyRight"]='Y';
-						if(val.rightCode=='miaoBuyRight') localStorage["miaoBuyRight"]='Y';
-					});
-					showUserMessage();
-				}else{
-					$('#userMessage').html('<br/>用户验证失败！信息：'+data.message);
-				}
-			},
-			error: function () {
-				console.log("获取Json数据失败");					
-			}
-		});
-	}else{
-		showUserMessage();
-	}
-}
-
-function showUserMessage(){
-	var htmlStr='';
-	if(localStorage["activeEndDate"]){
-		htmlStr='用户有效期：'+localStorage["activeEndDate"]
-	}else{
-		htmlStr='用户验证失败！请修改用户信息再保存！'
-	}
-	$('#userMessage').html('<br/>'+htmlStr
-	+'<br/>卡时下单权限：'+localStorage["orderBuyRight"]
-	+'<br/>卡时付款权限：'+localStorage["payBuyRight"]
-	+'<br/>秒杀助手权限：'+localStorage["miaoBuyRight"]);
-}
-
 function save_localStorage() {
-	localStorage.setItem("click_buy_delay",$('#click_buy_delay').val());
-	localStorage.setItem("ref_auto_buy",getCheckBox($('#ref_auto_buy')));
-	localStorage.setItem("ref_background",getCheckBox($('#ref_background')));
-	localStorage.setItem("bell_alert",getCheckBox($('#bell_alert')));
-	localStorage.setItem("msg_alert",getCheckBox($('#msg_alert')));
-	localStorage.setItem("ref_bf_buy",getCheckBox($('#ref_bf_buy')));
-	localStorage.setItem("click_buy",getCheckBox($('#click_buy')));
-	localStorage.setItem("click_order",getCheckBox($('#click_order')));
-	localStorage.setItem("debug_mode",getCheckBox($('#debug_mode')));
-	localStorage.setItem("miao_deal_sec",$('#miao_deal_sec').val());
-	localStorage.setItem("miao_kill_time",$('#miao_kill_time').val());
-	localStorage.setItem("server_time_gap",$('#server_time_gap').val());
+	localStorage.setItem("apiHost",$('#apiHost').val());
 	localStorage.setItem("leadTimeOfBookTime",$('#leadTimeOfBookTime').val());
-	localStorage.setItem("miao_lead_ref_sec",$('#miao_lead_ref_sec').val());
-	localStorage.setItem("miao_frequency",$('#miao_frequency').val());
-	localStorage.setItem("miao_test_id",$('#miao_test_id').val());
-	localStorage.setItem("miao_img_style",$('#miao_img_style').val());
-	localStorage.setItem("license_code",$('#license_code').val());
-	localStorage.setItem("click_pay",getCheckBox($('#click_pay')));
-	localStorage.setItem("pay_password",$('#pay_password').val());
-	localStorage.setItem("username",$('#username').val());
-	localStorage.setItem("user_password",$('#user_password').val());
+	localStorage.setItem("delayTimeOfBookTime",$('#delayTimeOfBookTime').val());
+	localStorage.setItem("buyPageMaxRetryTimes",$('#buyPageMaxRetryTimes').val());
+	localStorage.setItem("baiduOcrKeys",$('#baiduOcrKeys').val());
+	localStorage.setItem("clickBuy",getCheckBox($('#clickBuy')));
+	localStorage.setItem("clickOrder",getCheckBox($('#clickOrder')));
+	localStorage.setItem("debugMode",getCheckBox($('#debugMode')));
 }
 
 function default_options() {
-	localStorage.setItem("click_buy_delay","600");
-	localStorage.setItem("ref_auto_buy","N");
-	localStorage.setItem("ref_background","N");
-	localStorage.setItem("bell_alert","Y");
-	localStorage.setItem("msg_alert","Y");
-	localStorage.setItem("ref_bf_buy","N");
-	localStorage.setItem("click_buy","Y");
-	localStorage.setItem("click_order","Y");
-	localStorage.setItem("debug_mode","N");
-	localStorage.setItem("miao_deal_sec","60");
-	localStorage.setItem("miao_kill_time","1000");
-	localStorage.setItem("server_time_gap","0");
+	localStorage.setItem("apiHost","http://erptest.xinyiglass.com:8000");
 	localStorage.setItem("leadTimeOfBookTime","500");
-	localStorage.setItem("miao_lead_ref_sec","5");
-	localStorage.setItem("miao_frequency","10");
-	localStorage.setItem("miao_test_id","");
-	localStorage.setItem("miao_img_style","width:900px;height:220px");
-	localStorage.setItem("license_code","");
-	localStorage.setItem("click_pay","N");
-	localStorage.setItem("pay_password","");
-	sessionStorage.setItem('quickBuyFlag','N');
-	localStorage.setItem('username','kqmai.com');
-	localStorage.setItem('user_password','kqmai123');
-	getUserMessage();
+	localStorage.setItem("delayTimeOfBookTime","0");
+	localStorage.setItem("buyPageMaxRetryTimes","10");
+	localStorage.setItem("baiduOcrKeys","");
+	localStorage.setItem("clickBuy","Y");
+	localStorage.setItem("clickOrder","Y");
+	localStorage.setItem("debugMode","N");
 }
 
 // Restores select box state to saved value from localStorage.
 function get_options() {
 	//载入处理
-	$('#click_buy_delay').val(localStorage["click_buy_delay"]||'600');
-	setCheckBox($('#ref_auto_buy'),localStorage["ref_auto_buy"]||'N');
-	setCheckBox($('#ref_background'),localStorage["ref_background"]||'N');
-	setCheckBox($('#bell_alert'),localStorage["bell_alert"]||'Y');
-	setCheckBox($('#msg_alert'),localStorage["msg_alert"]||'Y');
-	setCheckBox($('#ref_bf_buy'),localStorage["ref_bf_buy"]||'N');
-	setCheckBox($('#click_buy'),localStorage["click_buy"]||'Y');
-	setCheckBox($('#click_order'),localStorage["click_order"]||'Y');
-	setCheckBox($('#debug_mode'),localStorage["debug_mode"]||'N');
-	$('#miao_deal_sec').val(localStorage["miao_deal_sec"]||'60');
-	$('#miao_kill_time').val(localStorage["miao_kill_time"]||'1000');
-	$('#server_time_gap').val(localStorage["server_time_gap"]||'0');
+	$('#apiHost').val(localStorage["apiHost"]||'http://erptest.xinyiglass.com:8000');
 	$('#leadTimeOfBookTime').val(localStorage["leadTimeOfBookTime"]||'500');
-	$('#miao_lead_ref_sec').val(localStorage["miao_lead_ref_sec"]||'5');
-	$('#miao_frequency').val(localStorage["miao_frequency"]||'10');
-	$('#miao_test_id').val(localStorage["miao_test_id"]||'');
-	$('#miao_img_style').val(localStorage["miao_img_style"]||'width:900px;height:220px');
-	$('#license_code').val(localStorage["license_code"]||'');
-	setCheckBox($('#click_pay'),localStorage["click_pay"]||'N');
-	$('#pay_password').val(localStorage["pay_password"]||'');
-	$('#username').val(localStorage["username"]);
-	$('#user_password').val(localStorage["user_password"]);
-	$('#timeGap').html(localStorage["timeGap"]);
-	getUserMessage();
+	$('#delayTimeOfBookTime').val(localStorage["delayTimeOfBookTime"]||'0');
+	$('#buyPageMaxRetryTimes').val(localStorage["buyPageMaxRetryTimes"]||'10');
+	$('#baiduOcrKeys').val(localStorage["baiduOcrKeys"]||'');
+	setCheckBox($('#clickBuy'),localStorage["clickBuy"]||'Y');
+	setCheckBox($('#clickOrder'),localStorage["clickOrder"]||'Y');
+	setCheckBox($('#debugMode'),localStorage["debugMode"]||'N');
 }
 
 function getGapTime(url, callback){
@@ -245,16 +146,14 @@ $(function(){
 		  shift: 1, //0-6的动画形式，-1不开启
 		  skin: 'layui-layer-rim', //加上边框
 		  closeBtn: 0,//不显示关闭按钮
-		  content: '<div style="padding:20px;"><B>是否启用一键购买功能？</B>'
+		  content: '<div style="padding:20px;"><B>是否启用大麦下单功能？</B>'
 					+'<br/>免责声明：'
-					+'<br/>此程序是为了研究js而编写的，仅用于技术交流，不可以作为商业用途！'
+					+'<br/>此程序是为了研究js而编写的，仅用于技术交流！'
 					+'<br/>注意：<br/>自动购买下的订单信息可能会出错，所以，请在付款之前，要多注意！'
 					+'<br/>不过，话说回来，买错了，取消订单就可以了，对您也不会有任何损失。<br/>'
 					+'<br/>另外，该程序保证纯洁度，就是无广告，无窃取用户的私人信息或者密码等的后台代码。咱们都是良民，违法的事情不会做的。<br/>'
-					+'<br/>(2017.12.9更新)添加辅助秒杀功能。打开http://miaosha.taobao.com/进入秒杀区就可用。为了公平起见，每个淘宝用户只可以有30天的试用期。<br/>'
 					+'<br/><B>如果有疑问请联系作者samt007!</B>'
-					+'<br/>联系邮件:samt007@qq.com'
-					+'<br/>或者访问一键购物助手的官方主页（快去买）：<a href="http://kqmai.com" target="_blank">http://kqmai.com</a></div>',
+					+'<br/>联系邮件:samt007@qq.com',
 		  btn: ['<b>同意并启用自动购物功能</b>', '取消'],
 		  success: function(){
 					$('.layui-layer-rim').css('z-index','999999999');
@@ -268,7 +167,6 @@ $(function(){
 				},btn2: function(index, layero){
 					console.log('取消');
 					$('#setting').html('警告：您没同意自动购物软件使用协议。该功能无效！<br/>如果想启用功能，请刷新该界面，然后同意软件协议即可。');
-					$('#miaoSetting').remove();
 					$('#settingBtn').remove();
 					layer.msg('您没同意自动购物软件使用协议。该功能无效！<br/>如果想启用功能，请刷新该界面，然后同意软件协议即可。', {icon: 2});
 				}

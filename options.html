@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<title>一键购买助手功能 - 设定</title>
+<title>大麦下单助手功能 - 设定</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8">
 <link rel="stylesheet" type="text/css" href="include/bootstrap/css/bootstrap.quick-buy.css">
 <style type="text/css" src="include/layer/skin/layer.css"></style>
@@ -51,196 +51,81 @@
 .footer a {
     color: #fff;
 }
+input{
+	margin-top: -2px;
+	margin-bottom: 1px;
+	vertical-align: middle;
+}
 </style>
 </head>
 <body>
-    <div class="header"><div class="header-logo"><p><span>一键购物助手 - 设置中心</span></p></div></div>
+    <div class="header"><div class="header-logo"><p><span><a href="https://www.damai.cn/" target="_blank" style="color: red;">大麦网</a>下单助手 - 设置中心</span></p></div></div>
 	<div id="divMain">
 	<div>
 		<form class="form-horizontal" style="margin:20px" role="form">
 		  <fieldset>
-		  <!--<legend>-->
-		  <!--<h3><B>一键购买助手设置</B></h3>-->
-		  <!--<h4>官方主页（快去买）：<a href="http://kqmai.com" target="_blank">http://kqmai.com</a></h4>-->
-		  <!--</legend>-->
 			<ul id="settingTab" class="nav nav-tabs">
 				<li class="active"><a href="#main" data-toggle="tab">全局设置</a></li>
-				<li><a href="#order" data-toggle="tab">下单助手设置</a></li>
-				<li><a href="#miao" data-toggle="tab">秒杀助手设置</a></li>
-				<li><a href="http://kqmai.com/installation.html" target="_blank">安装说明(版本更新)</a></li>
-				<li><a href="http://kqmai.com/buy.html" target="_blank">使用说明</a></li>
 			</ul>
 			<div id="settingTabContent" class="tab-content">
 			<div class="tab-pane fade in active" id="main">
 				<div id="setting" style="font-size:8px;line-height:1.1;padding-top:20px">
-					<div class="form-group">
-					<label for="ref_auto_buy" class="col-sm-3 control-label">加载页面自动购物</label>
-					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="ref_auto_buy">
-					  <span class="help-block">当进入界面或者刷新页面的时候，则触发自动购物功能.
-					  <br/>注意：当取消了这个选择，要启动自动购物，请点击功能的图标触发自动购物！</span>
-					</div>
-					</div>
-					<div class="form-group">
-					<label for="ref_background" class="col-sm-3 control-label">后台管理界面定期刷新</label>
-					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="ref_background">
-					  <span class="help-block">为防止淘宝在自动购买的时候需要重新登录帐号。
-					  <br/>添加后台管理的时候自动刷新的功能。</span>
-					</div>
-					</div>
 					<div class="form-group form-group-sm">
-					<label for="server_time_gap" class="col-sm-3 control-label">服务器时间同步</label>
+					<label for="apiHost" class="col-sm-3 control-label">后台服务器API主机地址</label>
 					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="server_time_gap" style="width:30%;display:none;" placeholder="服务器时间调整">
-					  <button type="button" id="syncTime" class="btn btn-success" style="display:inline-block">同步淘宝时间</button>
-					  <span class="help-block">淘宝服务器和本地时间的时间差，单位毫秒(1秒=1000毫秒)
-					  <br/>公式：服务器时间=本地时间+时间差（<span id="timeGap" style="font-weight:bold;color:red;"></span>毫秒）。
-					  <br/><b>注意：后台有个定时器，每隔3分钟会自动同步时间，所以，您没必要手动同步时间。</b>
-					  </span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="username" class="col-sm-3 control-label">一键购物助手用户</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="username" style="width:30%" placeholder="购物助手用户"><br/>
-					  <input type="password" class="form-control" id="user_password" style="width:30%" placeholder="密码">
-					  <span class="help-block">请注意！这个是购物助手的用户，非淘宝用户。
-					  <br/>默认用这个用户：kqmai.com/kqmai123<span id="userMessage" style="color:red;font-weight:bold;"></span></span>
+					  <input type="text" class="form-control" id="apiHost" style="width:50%;display:inline-block" placeholder="主机地址">
+					  <span class="help-block">后台服务器API主机url地址。</span>
 					</div>
 					</div>
 					<div class="form-group">
-					<label for="debug_mode" class="col-sm-3 control-label">启用调试模式</label>
+					<label for="clickBuy" class="col-sm-3 control-label">自动点击立刻购买按钮</label>
 					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="debug_mode">
-					  <span class="help-block">在web的控制台是否显示log信息。</span>
+					  <input type="checkbox" class="checkbox inline" id="clickBuy">
+					  <span class="help-block">下单界面点击购买按钮的配置。默认Y。</span>
 					</div>
 					</div>
-				</div>
-			</div>
-			<div class="tab-pane fade in" id="order">
-				<div id="setting" style="font-size:8px;line-height:1.1;padding-top:20px">
+					<div class="form-group">
+					<label for="clickOrder" class="col-sm-3 control-label">自动点击提交订单按钮</label>
+					<div class="col-sm-9">
+					  <input type="checkbox" class="checkbox inline" id="clickOrder">
+					  <span class="help-block">提交订单的界面点击提交订单按钮的配置。默认Y。</span>
+					</div>
+					</div>
 					<div class="form-group form-group-sm">
 					<label for="leadTimeOfBookTime" class="col-sm-3 control-label">下单提前时间调整(毫秒)</label>
 					<div class="col-sm-9">
 					  <input type="text" class="form-control" id="leadTimeOfBookTime" style="width:25%;display:inline-block" placeholder="下单提前时间调整">
-					  &nbsp;&nbsp;
 					  <span class="help-block">卡时间操作的提前操作时间(ms)，单位毫秒(1秒=1000毫秒)
 					  <br/>换句话说就是提前切换至下单界面进行购买的时间！</span>
 					</div>
 					</div>
-					<div class="form-group">
-					<label for="click_buy" class="col-sm-3 control-label">自动购买至下单界面</label>
+					<div class="form-group form-group-sm">
+					<label for="delayTimeOfBookTime" class="col-sm-3 control-label">下单延迟时间调整(毫秒)</label>
 					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="click_buy">
-					  <span class="help-block">确定否自动点购买按钮，到下单界面。一般为Y</span>
-					</div>
-					</div>
-					<div class="form-group">
-					<label for="click_order" class="col-sm-3 control-label">自动购买至付款界面</label>
-					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="click_order">
-					  <span class="help-block">确定是否自动点提交订单，到付款界面。一般为Y</span>
-					</div>
-					</div>
-					<div class="form-group">
-					<label for="click_pay" class="col-sm-3 control-label">自动付款</label>
-					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="click_pay">
-					  <span class="help-block" style="color:red;font-weight:800;">确定是否自动付款！需要配合付款密码。这个要慎重。一般为N</span>
+					  <input type="text" class="form-control" id="delayTimeOfBookTime" style="width:25%;display:inline-block" placeholder="下单延迟时间调整">
+					  <span class="help-block">卡时间操作的延迟操作时间(ms)，单位毫秒(1秒=1000毫秒)
+					  <br/>换句话说就是延迟切换至下单界面进行购买的时间！</span>
 					</div>
 					</div>
 					<div class="form-group form-group-sm">
-					<label for="pay_password" class="col-sm-3 control-label">付款密码</label>
+					<label for="buyPageMaxRetryTimes" class="col-sm-3 control-label">自动下单重试次数</label>
 					<div class="col-sm-9">
-					  <input type="password" class="form-control" id="pay_password" style="width:30%" placeholder="">
-					  <span class="help-block" style="color:red;font-weight:800;">付款密码，如果不清楚风险的请不要随便输入！</span>
+					  <input type="text" class="form-control" id="buyPageMaxRetryTimes" style="width:25%;display:inline-block" placeholder="重试次数">
+					  <span class="help-block">自动下单失败的话，最多重试次数。</span>
+					</div>
+					</div>
+					<div class="form-group form-group-sm">
+					<label for="baiduOcrKeys" class="col-sm-3 control-label">百度Ocr Key列表</label>
+					<div class="col-sm-9">
+					  <textarea class="form-control" rows="8" id="baiduOcrKeys" style="width:90%;display:inline-block"></textarea>
+					  <span class="help-block">百度ocr key列表，自动调用百度ocr的时候用到。每一个key可以免费用50次/天的识别次数。</span>
 					</div>
 					</div>
 					<div class="form-group">
-					<label for="bell_alert" class="col-sm-3 control-label">自动提示音</label>
+					<label for="debugMode" class="col-sm-3 control-label">启用调试模式</label>
 					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="bell_alert">
-					  <span class="help-block">成功下单购买是否自动提示音</span>
-					</div>
-					</div>
-					<div class="form-group">
-					<label for="msg_alert" class="col-sm-3 control-label">自动提示消息</label>
-					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="msg_alert">
-					  <span class="help-block">成功下单购买是否自动提示消息</span>
-					</div>
-					</div>
-					<div class="form-group">
-					<label for="ref_bf_buy" class="col-sm-3 control-label">购买前自动刷新</label>
-					<div class="col-sm-9">
-					  <input type="checkbox" class="checkbox inline" id="ref_bf_buy">
-					  <span class="help-block">预约购买之前是否自动刷新。
-					  <br/>只要设定了购买前自动刷新，系统会提前800ms执行刷新的动作。</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="click_buy_delay" class="col-sm-3 control-label">购买延迟时间(毫秒)</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="click_buy_delay" style="width:30%" placeholder="延迟购买时间">
-					  <span class="help-block">在购买前刷新的情况下，最少延迟多少毫秒(1秒=1000毫秒)自动点击购买按钮。<br/>
-					  主要是为了跳过淘宝的检测。看需设置。购买速度太快可能会导致淘宝的限制！</span>
-					</div>
-					</div>
-				</div>
-			</div>
-			<div class="tab-pane fade" id="miao">
-				<div id="miaoSetting" style="font-size:8px;line-height:1.1;padding-top:20px">
-					<div class="form-group form-group-sm">
-					<label for="miao_deal_sec" class="col-sm-3 control-label">秒杀前提醒时间(秒)</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="miao_deal_sec" style="width:30%" placeholder="">
-					  <span class="help-block">秒杀前的提醒时间设定(单位是秒)。
-					  <br/>一般是60秒(1分钟)之内即可。不宜过早，否则等待是漫长的！</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="miao_kill_time" class="col-sm-3 control-label">淘宝秒杀卡时(毫秒)</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="miao_kill_time" style="width:30%" placeholder="">
-					  <span class="help-block">设定单位毫秒。淘宝为了公平竞争，对秒杀加入了卡时的逻辑！
-					  <br/>就是从获取验证码图片开始计算，X秒之内的订单的请求会直接被忽略！</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="miao_lead_ref_sec" class="col-sm-3 control-label">提前刷新按钮时间(秒)</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="miao_lead_ref_sec" style="width:30%" placeholder="">
-					  <span class="help-block">默认5秒。
-					  <br/>不宜设置太长，否则点击频率太高。也不宜设置过短，因为您电脑的时间和淘宝的时间肯定有时间差。</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="miao_frequency" class="col-sm-3 control-label">自动抢宝每秒刷新次数</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="miao_frequency" style="width:30%" placeholder="">
-					  <span class="help-block">一般建议每秒点击5~10次即可。</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="miao_img_style" class="col-sm-3 control-label">验证码图片样式</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="miao_img_style" style="width:30%" placeholder="">
-					  <span class="help-block">主要是定义验证码显示大小，一般不需要修改。</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="license_code" class="col-sm-3 control-label">秒杀助手许可证</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="license_code" style="width:30%" placeholder="">
-					  <span class="help-block" style="color:red;font-weight:800;">秒杀助手的试用期30天。到期之后如果还想使用请联系samt007@qq.com</span>
-					</div>
-					</div>
-					<div class="form-group form-group-sm">
-					<label for="miao_test_id" class="col-sm-3 control-label">测试用的Miao ID</label>
-					<div class="col-sm-9">
-					  <input type="text" class="form-control" id="miao_test_id" style="width:30%" placeholder="">
-					  <span class="help-block" style="color:red;font-weight:800;">主要是为测试淘宝卡时用的Miao ID。开发者专用！非开发者请不要填入值！否则导致秒杀出现问题！</span>
+					  <input type="checkbox" class="checkbox inline" id="debugMode">
+					  <span class="help-block">在web的控制台显示log信息配置。默认N。</span>
 					</div>
 					</div>
 				</div>
@@ -257,7 +142,7 @@
 	</div>
 	</div>
 	<div class="footer">
-		<p>Copyright © &nbsp;<a href="http://kqmai.com" target="_blank">一键购物助手</a>&nbsp; 2015-2018</p> 
+		<p>Copyright © &nbsp;<a href="http://kqmai.com" target="_blank">大麦下单助手</a>&nbsp; 2018-2018</p> 
 	</div>
 </body>
 </html>
