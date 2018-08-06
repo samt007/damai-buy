@@ -12,8 +12,7 @@ function(require) {
 	sour = 'unknown',chooseRealname = 'Y';
 	window.runtime = runtime;
 	host.indexOf('piao.damai.cn') !== -1 ? sour = 'buyPage' : (host.indexOf('buy.damai.cn') !== -1 ? sour = 'orderPage' : sour = 'unknown');
-	console.log('host:'+host);
-	console.log('sour:'+sour);
+	console.log('host:',host,'sour:',sour);
 	//page.options.host = host, page.options.sour = sour;
 	bg.getItem(defaults,function(value){
 		var options = $.extend({}, defaults, value); 
@@ -22,6 +21,32 @@ function(require) {
 		console.log('computerTime:'+new Date().formatMS());
 		console.log('serverTime:'+runtime.nowFormatMS());
 		sour === 'buyPage' && injectDom.buyPageCrack(function(){
+			if(sessionStorage['autoBuy']=='Y'){
+				var curTimes = parseInt(sessionStorage['buyPageRetryTimes']);
+				++curTimes>parseInt(options.buyPageMaxRetryTimes) ? !function(){
+					page.clearSessionStorage();
+					showAlert('提示：本次自动下单重试次数超过'+options.buyPageMaxRetryTimes+'次，系统自动停止!');
+				}() : !function(){
+					console.log('第',curTimes,'次插件尝试重新下单！');
+					sessionStorage['buyPageRetryTimes'] = curTimes;
+					page.getFormSessionStorage();//page.options = JSON.parse(sessionStorage['pageOptions']);
+					console.log('autoBuy',page,',retry times',sessionStorage['buyPageRetryTimes']);
+					buy.autoChooseOptions(page.options.chooseOptions,function(){
+						buy.monitor(page, function(){
+							console.log('click at:'+runtime.nowFormatMS());
+							page.flushTagStorage(function(){//必须要存到tag里面才可以跨域
+								console.log('--->buyPage点击下单按钮时间：'+runtime.nowFormatMS());
+								page.options.clickBuy=='Y' ? $("#btnBuyNow")[0].click():!function(){
+									page.clearSessionStorage();
+									page.clearTagStorage();
+									showAlert('提示：设置不自动下单，大麦下单助手工作完成！!');
+								}()
+							})
+						})
+						injectDom.buyPageShowRemain(sour,page.options.buyRealname,page.options.bookTimeBuyMS,options,buy,page);
+					})
+				}()
+			}
 			injectDom.buyPageBookButton(function(){
 				$('#m-certification-a').length>0?(chooseRealname='Y'):(chooseRealname='N');
 				console.log('chooseRealname',chooseRealname);
@@ -33,17 +58,22 @@ function(require) {
 					page.options.delayTimeOfBookTime=parseInt(options.delayTimeOfBookTime),
 					page.options.baiduOcrKeys=JSON.parse(options.baiduOcrKeys),
 					page.options.bookTimeBuyMS=new Date(bookTimeBuy).getTime(),
-					page.options.chooseRealname=chooseRealname;
-					//page.options.apiHost=options.apiHost;
-					console.log(page);
+					page.options.chooseRealname=chooseRealname,
+					page.options.chooseOptions=buy.getPageChooseOptions();
+					console.log('bookBuy',page);
+					page.flushSessionStorage();//sessionStorage.setItem('pageOptions',JSON.stringify(page.options));
 					buy.monitor(page, function(){
 						console.log('click at:'+runtime.nowFormatMS());
 						page.flushTagStorage(function(){//必须要存到tag里面才可以跨域
 							console.log('--->buyPage点击下单按钮时间：'+runtime.nowFormatMS());
-							$("#btnBuyNow")[0].click();
+							page.options.clickBuy=='Y' ? $("#btnBuyNow")[0].click():!function(){
+								page.clearSessionStorage();
+								page.clearTagStorage();
+								showAlert('提示：设置不自动下单，大麦下单助手工作完成！!');
+							}()
 						})
 					})
-					injectDom.buyPageShowRemain(sour,buyRealname,page.options.bookTimeBuyMS,options,buy);
+					injectDom.buyPageShowRemain(sour,buyRealname,page.options.bookTimeBuyMS,options,buy,page);
 				});
 			});
 		});
@@ -74,7 +104,7 @@ function(require) {
 										});
 									})
 									})
-								},500)//避免出现错误：操作太快，请稍后再试
+								},200)//避免出现错误：操作太快，请稍后再试
 							})
 						})
 					})
@@ -108,10 +138,13 @@ function(a, b, c) {//后台的配置的属性，静态的
 		apiHost: 'http://erptest.xinyiglass.com:8000',   //http://kqmai.com  http://192.168.88.123:8088  http://jebms.xwtw.com:8888 http://erptest.xinyiglass.com:8000
         leadTimeOfBookTime: '800',//下单提前期：提前多少毫秒点击下单的按钮。
 		delayTimeOfBookTime: '0', //下单滞后期：延迟多少毫秒点击下单的按钮。
-		timeGap:0,
+		timeGap: '0',
 		debugMode:'N',
 		pageOptions: '',
-		baiduOcrKeys: ''
+		baiduOcrKeys: '',
+		buyPageMaxRetryTimes: '10',//自动下单最多重试次数
+		clickBuy:'Y',//自动点击立刻购买按钮
+		clickOrder:'Y',//自动点击提交订单按钮
     }
 });
 define("../widgets/option/page", ["../utils/background"],
@@ -120,23 +153,21 @@ function(r, b, c) {//页面的属性，动态的，也是后面的自动下单�
 		this.options = {}
 			/*bookTimeBuy: '',//预约下单时间
 			buyRealname: '', //购票人
-			bookTimeBuyMS: 0,//预约时间毫秒
-			leadTimeOfBookTime: 0,
-			delayTimeOfBookTime: 0*/
+			bookTimeBuyMS: 0,//预约时间毫秒*/
 	},
 	bg = r("../utils/background");
 	page.prototype = {
-		flushSessionStorage: function() {
+		flushSessionStorage: function() {//记录信息到session，当页面刷新的时候还可以自动下单！
 			var a = this;
-			sessionStorage['pageOptions'] = JSON.stringify(a.options)
+			!sessionStorage.setItem('autoBuy','Y') && !sessionStorage.setItem('pageOptions',JSON.stringify(a.options)) && !sessionStorage.setItem('buyPageRetryTimes','0');
 		},
 		getFormSessionStorage: function() {
 			var a = this;
-			a.options=$.extend(!0, a.options, JOSN.parse(sessionStorage['pageOptions']))
+			a.options=$.extend(!0, a.options, JSON.parse(sessionStorage['pageOptions']))
 		},
 		clearSessionStorage: function(callback) {
 			var a = this;
-			sessionStorage['pageOptions'] = ''
+			!sessionStorage.setItem('autoBuy','N') && !sessionStorage.setItem('pageOptions','') && !sessionStorage.setItem('buyPageRetryTimes','0');
 		},
 		flushTagStorage: function(callback) {
 			var a = this;
@@ -169,8 +200,59 @@ function(l, h, g) {
 			console.log(to+' ms 后执行下单动作！定时器:'+this.timer);
         },
 		stopMonitor: function(){
-			this.timer && clearTimeout(this.timer)
-			console.log('停止执行下单的定时器:'+this.timer);
+			this.timer && !clearTimeout(this.timer);
+			console.log('停止执行下单的定时器 ',this.timer);
+		},
+		getPageChooseOptions: function(){
+			var performList=[],//演出时间，位置法
+			priceList=[],//选择票价，用位置法定位
+			cartList=[];//选择数量，对应位置的数量。默认是1
+			$('#performList ul>li').each(function(i,o){
+				$(o).hasClass('itm-sel') && performList.push(i);
+			})
+			$('#priceList ul>li').each(function(i,o){
+				$(o).hasClass('itm-sel') && priceList.push(i);
+			})
+			$('#cartList ul>li').each(function(i,o){
+				cartList.push(parseInt($(o).find('input').val()));
+			})
+			//console.log(performList,priceList,cartList)
+			return {"performList":performList,"priceList":priceList,"cartList":cartList}
+		},
+		autoChooseOptions: function(chooseOptions,callback){
+			if(!chooseOptions){
+				alert('chooseOptions为空！程序中断！');
+				return;
+			}
+			f.populateDom('#performList ul>li a','performList',100,50,function(dom){
+				var $perform = $($('#performList ul>li')[chooseOptions.performList[0]]);
+				!$perform.hasClass('itm-sel') && $perform.find('a')[0].click();
+				setTimeout(function(){
+					f.populateDom('#performList ul>li.itm-sel a','itm-sel-performList',100,50,function(dom){
+						setTimeout(function(){
+							for(var pricePos of chooseOptions.priceList){
+								console.log('pricePos',pricePos);
+								var $price = $($('#priceList ul>li')[pricePos]);
+								!$price.hasClass('itm-sel') && $price.find('a')[0].click();
+							}
+							f.populateDom('#cartList ul>li input','cartList',100,50,function(){
+								for(var cartIdx in chooseOptions.cartList){
+									console.log('cartIdx',cartIdx,chooseOptions.cartList[cartIdx]);
+									$($('#cartList ul>li')[cartIdx]).find('input').val(chooseOptions.cartList[cartIdx]);
+								}
+								callback && callback();
+							},function(){
+								alert('自动选择购物车失败！找不到dom操作！');
+							})
+						},0);
+					},function(){
+						alert('自动下单失败！未选择演出时间！');
+					})
+				},0);
+			},function(){
+				alert('自动下单失败！找不到dom操作！');
+			});
+			
 		}
     });
     g.exports = new j
@@ -385,7 +467,10 @@ function(l, h, g) {
 			f.populateDom('#nc_1__scale_text span[data-nc-lang="_yesTEXT"]','getCaptchaImgResult',100,10,function(dom){
 				setTimeout(function(){
 					console.log('--->图片验证通过，自动点击确认按钮时间：'+runtime.nowFormatMS());
-					$('.m-modal button[ms-on-click="@tongdunModal.onConfirm()"]')[0].click();
+					l.page.options.clickOrder=='Y' ? $('.m-modal button[ms-on-click="@tongdunModal.onConfirm()"]')[0].click()
+					:!function(){
+						showAlert('提示：设置不自动提交订单，大麦下单助手工作完成！!');
+					}()
 					bg.ajax({
 						async: true,
 						type: 'post', 
@@ -408,7 +493,7 @@ function(l, h, g) {
 					l.clickCaptchaImg(data,function(){
 						l.getCaptchaImgResult(callback);
 					})
-				}) : !alert('提示：点击验证图片失败！请重新预约！');
+				}) : !showAlert('提示：点击验证图片失败！请重新预约！');
 			});
 		}
     });
@@ -1098,7 +1183,7 @@ function(c, b, d) {
 					}
 			});
 		 },
-		 buyPageShowRemain: function(sour,buyRealname,bookTimeBuyMS,options,buy){
+		 buyPageShowRemain: function(sour,buyRealname,bookTimeBuyMS,options,buy,page){
 			var buyRealnameDesc = buyRealname||'(未定义)'
 			,timeOut = bookTimeBuyMS-runtime.now()
 			,nextSecGap = timeOut%1000;
@@ -1151,6 +1236,7 @@ function(c, b, d) {
 				cancel: function(index){
 						layer.close(index);
 						buy.stopMonitor();
+						page.clearSessionStorage();
 						showAlert('提示：本次自动下单已经停止!');
 					}
 			});
