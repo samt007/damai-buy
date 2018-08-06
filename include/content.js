@@ -83,33 +83,28 @@ function(require) {
 			page.options = JSON.parse(options.pageOptions||'{}');
 			order.setPage(page);
 			page.options.chooseRealname=='Y' ? !function(){
-			order.clickRealnameBtn(function(type){
-				console.log('clickRealnameBtn 开始自动选择购票人:'+type+'...时间：'+runtime.nowFormatMS());
-				order.chooseRealname(type,function(){
-					console.log('chooseRealname 执行完毕...时间：'+runtime.nowFormatMS());
-					order.confirmRealname(type,function(){
-						console.log('confirmRealname 执行完毕...时间：'+runtime.nowFormatMS());
-						order.clickOrderConfirmBtn(function(){
-							console.log('clickOrderConfirmBtn 执行完毕...时间：'+runtime.nowFormatMS());
-							order.slidetounlock(function(){
-								console.log('slidetounlock 执行完毕...时间：'+runtime.nowFormatMS());
-								setTimeout(function(){
-									console.log('getCaptchaImgOcr 开始执行...时间：'+runtime.nowFormatMS());
-									order.getCaptchaImgOcr(function(data){
-									console.log('getCaptchaImgOcr 执行完毕...时间：'+runtime.nowFormatMS());
-									order.clickCaptchaImg(data,function(){
-										console.log('clickCaptchaImg 执行完毕...时间：'+runtime.nowFormatMS());
-										order.getCaptchaImgResult(data,function(){
-											console.log('getCaptchaImgResult 执行完毕...时间：'+runtime.nowFormatMS());
-										});
-									})
-									})
-								},200)//避免出现错误：操作太快，请稍后再试
+			console.log('orderPageRealnameDeal 开始自动选择购票人...时间：'+runtime.nowFormatMS());
+			order.orderPageRealnameDeal(function(type){
+				console.log('orderPageRealnameDeal 自动选择购票人执行完毕:'+type+'...时间：'+runtime.nowFormatMS());
+				order.clickOrderConfirmBtn(function(){
+					console.log('clickOrderConfirmBtn 执行完毕...时间：'+runtime.nowFormatMS());
+					order.slidetounlock(function(){
+						console.log('slidetounlock 执行完毕...时间：'+runtime.nowFormatMS());
+						setTimeout(function(){
+							console.log('getCaptchaImgOcr 开始执行...时间：'+runtime.nowFormatMS());
+							order.getCaptchaImgOcr(function(data){
+							console.log('getCaptchaImgOcr 执行完毕...时间：'+runtime.nowFormatMS());
+							order.clickCaptchaImg(data,function(){
+								console.log('clickCaptchaImg 执行完毕...时间：'+runtime.nowFormatMS());
+								order.getCaptchaImgResult(data,function(){
+									console.log('getCaptchaImgResult 执行完毕...时间：'+runtime.nowFormatMS());
+								});
 							})
-						})
+							})
+						},200)//避免出现错误：操作太快，请稍后再试
 					})
 				})
-			},function(){ alert('找不到购票人按钮处理对象！请自行到界面下单！'); })
+			},function(){ alert('找不到购票人按钮处理对象！请自行到界面下单！') })
 			}():!function(){//不需要选择购票人
 				console.log('clickRealnameBtn不需要选择购票人！时间：'+runtime.nowFormatMS());
 				order.clickOrderConfirmBtn(function(){
@@ -277,20 +272,33 @@ function(l, h, g) {
 			this.page = page;
 			console.log('setPage:',this.page);
 		},
-		clickRealnameBtn: function(callback,failCallback){
-			var maxTimes=50,curTimes=0,
+		orderPageRealnameDeal: function(callback,failCallback){//自动操作购票人
+			var maxTimes = 50, curTimes = 0, l = this,
 			realnameTaskId = setInterval(function(){
 				console.log(curTimes);
-				var realnameBtnDom1 = $('.m-panel-realname a.u-btn-rds')[0],realnameBtnDom2=$('.hd-1 a.u-btn-rds')[0];
+				var $realnameBtnDom1 = $('.m-panel-realname a.u-btn-rds'),$realnameBtnDom2=$('.hd-1 a.u-btn-rds'),$realnameBtnDom,type,doneCnt=0,times=1,maxTimes=100;
 				++curTimes<maxTimes ? !function(){
-					(realnameBtnDom1 || realnameBtnDom2) && clearInterval(realnameTaskId);
-					realnameBtnDom1 && !realnameBtnDom1.click() && callback && callback('realnameType1');
-					realnameBtnDom2 && !realnameBtnDom2.click() && callback && callback('realnameType2');
+					$realnameBtnDom1.length>0 && ($realnameBtnDom=$realnameBtnDom1) && (type='realnameType1') && clearInterval(realnameTaskId);
+					$realnameBtnDom2.length>0 && ($realnameBtnDom=$realnameBtnDom2) && (type='realnameType2') && clearInterval(realnameTaskId);
+					$realnameBtnDom.each(function(i,o){//支持自动选择多个购票人
+						!o.click() && l.chooseRealname(type,function(){
+							console.log('chooseRealname 执行完毕...时间：'+runtime.nowFormatMS());
+							l.confirmRealname(type,function(){
+								console.log('confirmRealname 执行完毕...时间：'+runtime.nowFormatMS());
+								doneCnt++;
+							})
+						})
+					})
+					!function n(){//另外发一个计时器判断前面是否处理完毕
+						console.log('times:'+times,'doneCnt:'+doneCnt);
+						doneCnt==$realnameBtnDom.length ? callback && callback(type) : setTimeout(function(){
+							++times<=maxTimes ? n() : failCallback&&failCallback();
+						},50)
+					}()
 				}():!function(){
 					clearInterval(realnameTaskId);
 					failCallback&&failCallback();
 				}()
-				//console.log(curTimes,realnameBtnDom1,realnameBtnDom2);
 			},100);
 		},
 		chooseRealname: function(type,callback){
@@ -387,49 +395,49 @@ function(l, h, g) {
 		getCaptchaImgOcr: function(callback){
 			var l = this;
 			f.populateDom('#nc_1_clickCaptcha .clickCaptcha_img img','getCaptchaImg',100,40,function(dom){
-				var account = 'samt007'
-				   ,question = $('#nc_1__scale_text').html().replace('<i>','').replace('</i>','')
-				   ,imageChar = $('#nc_1__scale_text i').html().replace('“','').replace('”','')
-				   ,imageStr = $(dom).attr('src').split("base64,")[1]
-				   ,t = + new Date
-				   ,load = injectDom.showLoading('<b>请耐心等候...插件正在努力破解验证码中.....</b>');
-				console.log('------->question:',question);
-				bocr.setBaiduOcrKeys(l.page.options.baiduOcrKeys);
-				bocr.getiImageOcr(imageStr,function(data){
-					console.log('bocr.getiImageOcr 执行耗时:',(+ new Date - t));
-					var retry=true;
-					layer.close(load);
-					//分析结果，返回图片文字位置
-					data.words_result_num>0 && !function(){
-						for(var wr of data.words_result){
-							for(var c of wr['chars']){
-								//console.log(wr,c);
-								if(c.char == imageChar){
-									var ret = {
-										"charLeft": c.location.left,
-										"charWidth": c.location.width,
-										"charTop": c.location.top,
-										"charHeight": c.location.height,
-										"account": account,
-										"question": question,
-										"imageChar": imageChar,
-										"imageStr": imageStr
+				f.populateDom('#nc_1__scale_text i','getCaptchaImgChar',10,50,function(domText){
+					var account = 'samt007'
+					   ,question = $('#nc_1__scale_text').html().replace('<i>','').replace('</i>','')
+					   ,imageChar = $('#nc_1__scale_text i').html().replace('“','').replace('”','')
+					   ,imageStr = $(dom).attr('src').split("base64,")[1]
+					   ,t = + new Date
+					   ,load = injectDom.showLoading('<b>请耐心等候...插件正在努力破解验证码中.....</b>');
+					console.log('------->question:',question);
+					bocr.setBaiduOcrKeys(l.page.options.baiduOcrKeys);
+					bocr.getiImageOcr(imageStr,function(data){
+						console.log('bocr.getiImageOcr 执行耗时:',(+ new Date - t));
+						var retry=true;
+						layer.close(load);
+						//分析结果，返回图片文字位置
+						data.words_result_num>0 && !function(){
+							for(var wr of data.words_result){
+								for(var c of wr['chars']){
+									//console.log(wr,c);
+									if(c.char == imageChar){
+										var ret = {
+											"charLeft": c.location.left,
+											"charWidth": c.location.width,
+											"charTop": c.location.top,
+											"charHeight": c.location.height,
+											"account": account,
+											"question": question,
+											"imageChar": imageChar,
+											"imageStr": imageStr
+										}
+										retry=false, callback && callback(ret);
 									}
-									retry=false, callback && callback(ret);
 								}
 							}
-						}
-					}();
-					retry && 
-					(l.curOcrTimes++,l.curOcrTimes<=l.maxTimes && !function(){
-						console.log('ocr识别找不到',imageChar,'字，系统准备重试！');
-						$('#nc_1__btn_2')[0].click();
-					}() ? !setTimeout(function(){l.getCaptchaImgOcr(callback)},300)
-					: !alert("提示："+l.maxTimes+"次获取百度ocr信息失败！请您手动下单！"));//自动重试
-				});
-			},function(){
-				alert('获取验证图片失败！找不到dom操作！');
-			});
+						}();
+						retry && 
+						(l.curOcrTimes++,l.curOcrTimes<=l.maxTimes && !function(){
+							console.log('ocr识别找不到',imageChar,'字，系统准备重试！');
+							$('#nc_1__btn_2')[0].click();
+						}() ? !setTimeout(function(){l.getCaptchaImgOcr(callback)},300)
+						: !alert("提示："+l.maxTimes+"次获取百度ocr信息失败！请您手动下单！"));//自动重试
+					});
+				},function(){alert('获取验证图片问题失败！找不到dom操作！')});
+			},function(){alert('获取验证图片失败！找不到dom操作！')});
 		},
 		clickCaptchaImg: function(data,callback){//自动点击图片，最后一步了，真艰辛啊！
 			var img = document.getElementsByClassName('clickCaptcha_img')[0].getElementsByTagName('img')[0];
@@ -462,7 +470,7 @@ function(l, h, g) {
 		getCaptchaImgResult: function(data,callback){
 			var l = this;
 			console.log('getCaptchaImgResult this Page:',l.page);
-			f.populateDom('#nc_1__scale_text span[data-nc-lang="_yesTEXT"]','getCaptchaImgResult',100,10,function(dom){
+			f.populateDom('#nc_1__scale_text span[data-nc-lang="_yesTEXT"]','getCaptchaImgResult',200,10,function(dom){
 				setTimeout(function(){
 					console.log('--->图片验证通过，自动点击确认按钮时间：'+runtime.nowFormatMS());
 					l.page.options.clickOrder=='Y' ? $('.m-modal button[ms-on-click="@tongdunModal.onConfirm()"]')[0].click()
@@ -553,11 +561,11 @@ function(b, c, a) {
 							l.baiduOcrKeys[0]['accessToken']=token,
 							l.setRedisOcrKey(l.baiduOcrKeys),
 							l.accessToken=token,
-							l.getiImageOcr(i, callback);//自我递归调用
+							setTimeout(function(){l.getiImageOcr(i, callback)},200);//自我递归调用
 						})
 					}else if(data["error_code"]=='17'){//{"error_msg":"Open api daily request limit reached","error_code":17}
 						l.setOcrKey("getNextKey");
-						l.getiImageOcr(i, callback);//自我递归调用
+						setTimeout(function(){l.getiImageOcr(i, callback)},200);//自我递归调用
 					}else if(data["error_code"]=='18'){//{"error_msg":"Open api qps request limit reached","error_code":18}
 						console.log("need to retry ! times:"+l.retryTimes);
 						l.retryTimes++;
@@ -565,7 +573,7 @@ function(b, c, a) {
 							alert("递归重试次数超过("+l.MAX_RETRY_TIMES+")次，程序退出！");
 							return false;
 						}
-						l.getiImageOcr(i, callback);//自我递归调用
+						setTimeout(function(){l.getiImageOcr(i, callback)},200);//自我递归调用
 					}else{
 						l.retryTimes = 0;
 						l.tokenTimes = 0;
